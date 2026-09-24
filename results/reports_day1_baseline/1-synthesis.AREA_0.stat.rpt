@@ -1,0 +1,14 @@
+61. Printing statistics.
+
+=== picorv32 ===
+
+Number of wires: 9126
+Number of wire bits: 9508
+Number of public wires: 1513
+Number of public wire bits: 1895
+Number of memories: 0
+Number of memory bits: 0
+Number of processes: 0
+Number of cells: 9406
+
+Chip area for module '\\picorv32': 100370.012800
