@@ -310,6 +310,8 @@ Typical workflow:
 14. Record final metrics
 ```
 
+For the repository's reproducibility rules, experiment hygiene, and guidance on the current captured evidence, see [`docs/reproducibility.md`](docs/reproducibility.md).
+
 ## Engineering Questions Explored
 
 This lab is organized around practical backend questions:
