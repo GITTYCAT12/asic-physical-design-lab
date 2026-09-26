@@ -1,0 +1,12 @@
+experiment,status,artifact,notes
+baseline,captured,reports_day1_baseline/metrics.csv,"Completed flow metrics retained in the repository."
+eco_negative_case,captured,reports_day6_eco/metrics.csv,"Recorded run is marked flow failed; retained as a negative timing/ECO case."
+multicorner_signoff,captured,reports_day7_multicorner/metrics.csv,"Completed flow with separate STA, DRC, LVS and XOR reports retained."
+utilization_sweep,captured,utilization_sweep_results.csv,"Six sweep rows captured."
+aspect_ratio_sweep,captured,ar_sweep_results.csv,"Four sweep rows captured."
+placement_modes,captured,placement_modes_results.csv,"Two placement-mode rows captured."
+congestion_padding,captured,congestion_pad_results.csv,"One cell-padding run captured."
+cts_sweep,placeholder,cts_experiment_results.csv,"CSV schema exists, but no numeric sweep rows are currently captured."
+timing_marathon,placeholder,timing_marathon_results.csv,"CSV schema exists, but no numeric sweep rows are currently captured."
+antenna_experiment,placeholder,antenna_experiment_results.csv,"CSV schema exists, but no numeric experiment rows are currently captured."
+clock_gating,placeholder,clock_gating_results.csv,"CSV schema exists, but no numeric experiment rows are currently captured."

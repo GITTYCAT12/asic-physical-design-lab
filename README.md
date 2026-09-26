@@ -285,7 +285,7 @@ The `results/` directory contains curated artifacts from multiple implementation
 - Timing/frequency experiments
 - Floorplan and utilization sweeps
 
-The repository deliberately stores **selected evidence instead of entire generated EDA run directories**.
+The repository deliberately stores **selected evidence instead of entire generated EDA run directories**. The current capture state is recorded in [`results/experiment_status.csv`](results/experiment_status.csv), so placeholder tables are not mistaken for completed experiments.
 
 ## Reproducibility
 
