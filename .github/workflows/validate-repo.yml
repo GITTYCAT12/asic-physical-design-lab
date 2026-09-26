@@ -1,0 +1,39 @@
+name: Repository validation
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run lightweight repository checks
+        run: make check
+
+      - name: Exercise the STA parser
+        shell: bash
+        run: |
+          cat > /tmp/sample_sta.rpt <<'EOF'
+          Startpoint: top/u_reg0/Q
+          Endpoint: top/u_reg1/D
+          slack (VIOLATED) -0.125
+
+          Startpoint: top/u_reg2/Q
+          Endpoint: top/u_reg3/D
+          slack (MET) 0.250
+          EOF
+
+          python scripts/parse_timing_paths.py /tmp/sample_sta.rpt --limit 0 --csv /tmp/parsed_timing.csv
+          grep -q "VIOLATION" /tmp/parsed_timing.csv
+          grep -q "0.250" /tmp/parsed_timing.csv
