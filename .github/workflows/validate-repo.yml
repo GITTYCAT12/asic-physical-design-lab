@@ -21,6 +21,9 @@ jobs:
       - name: Run lightweight repository checks
         run: make check
 
+      - name: Validate captured signoff evidence
+        run: python scripts/verify_tapeout_signoff.py day7_multicorner
+
       - name: Exercise the STA parser
         shell: bash
         run: |
