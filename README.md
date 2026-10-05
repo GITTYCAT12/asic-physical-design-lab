@@ -143,6 +143,7 @@ Collected evidence includes:
 | `generate_hold_eco.py` | Generate hold-ECO commands |
 | `parse_timing_paths.py` | Parse STA timing paths |
 | `verify_tapeout_signoff.py` | Summarize signoff metrics |
+| `compare_metrics.py` | Compare baseline/candidate implementation metrics |
 
 ## Repository Structure
 
@@ -163,6 +164,7 @@ asic-physical-design-lab/
 │   └── clocks.sdc
 │
 ├── scripts/
+│   ├── compare_metrics.py
 │   ├── fix_hold_eco.tcl
 │   ├── generate_hold_eco.py
 │   ├── macro_placement.cfg
@@ -259,6 +261,20 @@ The target open-source process design kit for the laboratory, providing SKY130 t
 [PicoRV32 — GitHub](https://github.com/YosysHQ/picorv32)
 
 The open-source RISC-V processor core used as the RTL design under test.
+
+## Timing-Closure Workflow
+
+The lab now separates **measurement**, **optimization** and **signoff evidence**. A timing change is not considered successful from WNS alone: the candidate is compared against a baseline for timing, area, routing and physical-verification metrics.
+
+For timing-path investigation, use `scripts/parse_timing_paths.py`. For repeatable before/after comparison of curated OpenLane `metrics.csv` files, use `scripts/compare_metrics.py`:
+
+```bash
+python scripts/compare_metrics.py \
+  results/reports_day1_baseline/metrics.csv \
+  results/reports_day6_eco/metrics.csv
+```
+
+The comparison intentionally marks unavailable values instead of treating OpenLane sentinel values such as `-1` as real measurements. See [`docs/timing-closure.md`](docs/timing-closure.md) for the full setup/hold investigation and ECO methodology.
 
 ## Metrics Tracked
 
