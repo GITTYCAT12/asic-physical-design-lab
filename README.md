@@ -163,6 +163,12 @@ asic-physical-design-lab/
 ├── constraints/
 │   └── clocks.sdc
 │
+├── docs/
+│   ├── experiment-design.md
+│   ├── reproducibility.md
+│   ├── signoff-checklist.md
+│   └── timing-closure.md
+│
 ├── scripts/
 │   ├── compare_metrics.py
 │   ├── fix_hold_eco.tcl
@@ -187,6 +193,7 @@ asic-physical-design-lab/
 │   └── reports_day7_multicorner/
 │
 ├── .gitignore
+├── Makefile
 └── README.md
 ```
 
@@ -287,6 +294,24 @@ The comparison intentionally marks unavailable values instead of treating OpenLa
 | Power | Internal, switching, leakage power |
 | Verification | DRC, LVS, XOR, antenna |
 | ECO | Before/after timing and signoff metrics |
+
+## Signoff Readiness
+
+The repository includes a reusable [signoff checklist](docs/signoff-checklist.md) covering constraints, implementation, timing, physical verification and evidence quality. The checklist is intentionally evidence-driven: unavailable measurements are recorded as unverified rather than assumed to pass.
+
+Use the lightweight command below to validate the captured signoff evidence for the default multicorner result set:
+
+```bash
+make signoff
+```
+
+A different captured run can be selected with:
+
+```bash
+make signoff RUN=<run_tag>
+```
+
+The [experiment design guide](docs/experiment-design.md) defines how implementation sweeps and ECO studies should isolate variables, preserve baselines and report regressions.
 
 ## Signoff Evidence
 
