@@ -1,7 +1,7 @@
 PYTHON ?= python3
 SHELL := /bin/bash
 
-.PHONY: help validate python-check shell-check check parse-timing util-sweep ar-sweep placement-sweep
+.PHONY: help validate python-check shell-check check parse-timing signoff util-sweep ar-sweep placement-sweep
 
 help:
 	@printf '%s\n' \
@@ -10,6 +10,7 @@ help:
 		'make shell-check     - syntax-check shell experiment scripts' \
 		'make check           - run all lightweight repository checks' \
 		'make parse-timing REPORT=<path> [LIMIT=10] - parse an OpenSTA report' \
+		'make signoff [RUN=day7_multicorner] - validate captured signoff evidence' \
 		'make util-sweep      - run the utilization experiment' \
 		'make ar-sweep        - run the aspect-ratio experiment' \
 		'make placement-sweep - run the placement-mode experiment'
@@ -28,6 +29,9 @@ check: validate python-check shell-check
 parse-timing:
 	@test -n "$(REPORT)" || (echo "Usage: make parse-timing REPORT=<path> [LIMIT=10]" && exit 2)
 	$(PYTHON) scripts/parse_timing_paths.py "$(REPORT)" --limit "$(if $(LIMIT),$(LIMIT),10)"
+
+signoff:
+	$(PYTHON) scripts/verify_tapeout_signoff.py "$(if $(RUN),$(RUN),day7_multicorner)"
 
 util-sweep:
 	bash scripts/sweep_util.sh
