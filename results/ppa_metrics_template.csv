@@ -1,0 +1,1 @@
+experiment_id,design,stage,config_ref,run_status,clock_period_ns,setup_wns_ns,setup_tns_ns,hold_whs_ns,hold_ths_ns,cell_area_um2,core_utilization_pct,signal_wire_length_um,via_count,drc_violations,antenna_violations,lvs_errors,report_path,notes
