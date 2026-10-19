@@ -1,14 +1,15 @@
 PYTHON ?= python3
 SHELL := /bin/bash
 
-.PHONY: help validate python-check shell-check check parse-timing signoff util-sweep ar-sweep placement-sweep
+.PHONY: help validate python-check shell-check test check parse-timing signoff util-sweep ar-sweep placement-sweep
 
 help:
 	@printf '%s\n' \
 		'make validate        - validate repository structure and result manifest' \
 		'make python-check    - compile Python scripts' \
 		'make shell-check     - syntax-check shell experiment scripts' \
-		'make check           - run all lightweight repository checks' \
+		'make test            - run Python unit tests' \
+		'make check           - run repository checks and unit tests' \
 		'make parse-timing REPORT=<path> [LIMIT=10] - parse an OpenSTA report' \
 		'make signoff [RUN=day7_multicorner] - validate captured signoff evidence' \
 		'make util-sweep      - run the utilization experiment' \
@@ -24,7 +25,10 @@ python-check:
 shell-check:
 	@find scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
 
-check: validate python-check shell-check
+test:
+	$(PYTHON) -m unittest discover -s tests -v
+
+check: validate python-check shell-check test
 
 parse-timing:
 	@test -n "$(REPORT)" || (echo "Usage: make parse-timing REPORT=<path> [LIMIT=10]" && exit 2)
