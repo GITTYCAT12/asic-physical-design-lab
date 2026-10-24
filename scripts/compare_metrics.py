@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 import sys
 from pathlib import Path
 
@@ -24,6 +25,19 @@ METRICS = {
     "lvs_total_errors": ("lvs_total_errors", "lower is better"),
 }
 
+NON_NEGATIVE_METRICS = {
+    "critical_path_ns",
+    "DIEAREA_mm^2",
+    "wire_length",
+    "vias",
+    "Final_Util",
+    "tritonRoute_violations",
+    "Magic_violations",
+    "pin_antenna_violations",
+    "net_antenna_violations",
+    "lvs_total_errors",
+}
+
 
 def read_metrics(path: Path) -> dict[str, str]:
     if not path.is_file():
@@ -37,12 +51,18 @@ def read_metrics(path: Path) -> dict[str, str]:
 
 def numeric(row: dict[str, str], key: str) -> float | None:
     value = row.get(key, "")
-    if value in (None, "", "-1"):
+    if value is None or value.strip() == "":
         return None
     try:
-        return float(value)
-    except ValueError:
+        parsed = float(value)
+    except (TypeError, ValueError):
         return None
+
+    if not math.isfinite(parsed):
+        return None
+    if key in NON_NEGATIVE_METRICS and parsed == -1:
+        return None
+    return parsed
 
 
 def verdict(delta: float, direction: str) -> str:
