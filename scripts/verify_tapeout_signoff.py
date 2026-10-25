@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -80,9 +81,13 @@ def metric_number(metrics: dict[str, str], key: str, cast=float) -> float | int:
     if value == "":
         raise ValueError(f"required metric '{key}' is missing or empty")
     try:
-        return cast(value)
-    except ValueError as exc:
+        parsed = cast(value)
+    except (TypeError, ValueError, OverflowError) as exc:
         raise ValueError(f"metric '{key}' is not numeric: {value!r}") from exc
+
+    if isinstance(parsed, float) and not math.isfinite(parsed):
+        raise ValueError(f"metric '{key}' must be finite: {value!r}")
+    return parsed
 
 
 def check_metrics(metrics: dict[str, str]) -> list[Check]:
@@ -116,13 +121,13 @@ def check_metrics(metrics: dict[str, str]) -> list[Check]:
         whs = metric_number(metrics, "whs", float)
         checks.append(Check("hold WHS", whs >= 0.0, f"{whs:+.3f} ns"))
     else:
-        checks.append(Check("hold WHS", True, "metric not present; report-level hold check used"))
+        checks.append(Check("hold WHS", False, "metric not present; hold status is unverified"))
 
     if "ths" in metrics:
         ths = metric_number(metrics, "ths", float)
         checks.append(Check("hold THS", ths >= 0.0, f"{ths:+.3f} ns"))
     else:
-        checks.append(Check("hold THS", True, "metric not present; report-level hold check used"))
+        checks.append(Check("hold THS", False, "metric not present; hold status is unverified"))
 
     if "lvs_total_errors" in metrics:
         lvs_errors = metric_number(metrics, "lvs_total_errors", int)
@@ -190,7 +195,12 @@ def main() -> int:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 2
 
-    checks = check_metrics(metrics)
+    try:
+        checks = check_metrics(metrics)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
+        return 2
+
     checks.extend(
         [
             check_report_exists(report_dir, "39-picorv32.lvs.rpt"),
