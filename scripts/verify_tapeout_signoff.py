@@ -136,6 +136,54 @@ def check_metrics(metrics: dict[str, str]) -> list[Check]:
     return checks
 
 
+def check_hold_report_slack(report_dir: Path) -> tuple[Check, Check]:
+    """Use the STA summary's worst hold slack when CSV hold metrics are absent."""
+    path = report_dir / "31-rcx_sta.summary.rpt"
+    if not path.is_file():
+        detail = f"hold metrics unavailable and summary report missing: {path}"
+        return (
+            Check("hold WHS", False, detail),
+            Check("hold THS", False, detail),
+        )
+
+    content = path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(
+        r"report_worst_slack\\s+-min\\s+\\(Hold\\).*?worst\\s+slack\\s+"
+        r"([-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?)",
+        content,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if match is None:
+        detail = f"could not parse worst hold slack from {path}"
+        return (
+            Check("hold WHS", False, detail),
+            Check("hold THS", False, detail),
+        )
+
+    slack = float(match.group(1))
+    if not math.isfinite(slack):
+        detail = f"worst hold slack is not finite in {path}"
+        return (
+            Check("hold WHS", False, detail),
+            Check("hold THS", False, detail),
+        )
+
+    whs = Check("hold WHS", slack >= 0.0, f"report worst slack {slack:+.3f} ns")
+    if slack >= 0.0:
+        ths = Check(
+            "hold THS",
+            True,
+            "worst hold slack is non-negative; no negative hold slack (THS=0)",
+        )
+    else:
+        ths = Check(
+            "hold THS",
+            False,
+            "THS metric unavailable and worst hold slack is negative",
+        )
+    return whs, ths
+
+
 def check_report_exists(report_dir: Path, name: str) -> Check:
     path = report_dir / name
     return Check(f"{name} exists", path.is_file(), str(path))
@@ -200,6 +248,14 @@ def main() -> int:
     except ValueError as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 2
+
+    if "whs" not in metrics or "ths" not in metrics:
+        report_whs, report_ths = check_hold_report_slack(report_dir)
+        for index, check in enumerate(checks):
+            if check.name == "hold WHS" and "whs" not in metrics:
+                checks[index] = report_whs
+            elif check.name == "hold THS" and "ths" not in metrics:
+                checks[index] = report_ths
 
     checks.extend(
         [

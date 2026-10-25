@@ -2,7 +2,7 @@
 
 import unittest
 
-from scripts.verify_tapeout_signoff import check_metrics, metric_number
+from scripts.verify_tapeout_signoff import check_hold_report_slack, check_metrics, metric_number
 
 
 BASE_METRICS = {
@@ -35,6 +35,36 @@ class SignoffMetricTests(unittest.TestCase):
 
         self.assertFalse(checks["setup WNS"].passed)
         self.assertFalse(checks["setup TNS"].passed)
+
+    def test_hold_summary_report_supplies_missing_metrics(self):
+        import tempfile
+        from pathlib import Path
+
+        report = """report_worst_slack -max (Setup)
+worst slack 1.14
+
+report_worst_slack -min (Hold)
+worst slack 0.32
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "31-rcx_sta.summary.rpt").write_text(report, encoding="utf-8")
+            whs, ths = check_hold_report_slack(Path(directory))
+
+        self.assertTrue(whs.passed)
+        self.assertIn("0.320 ns", whs.detail)
+        self.assertTrue(ths.passed)
+
+    def test_negative_hold_report_does_not_pass(self):
+        import tempfile
+        from pathlib import Path
+
+        report = "report_worst_slack -min (Hold)\\nworst slack -0.04\\n"
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "31-rcx_sta.summary.rpt").write_text(report, encoding="utf-8")
+            whs, ths = check_hold_report_slack(Path(directory))
+
+        self.assertFalse(whs.passed)
+        self.assertFalse(ths.passed)
 
     def test_non_finite_metrics_are_rejected(self):
         for value in ("nan", "inf", "-inf", "1e999"):
