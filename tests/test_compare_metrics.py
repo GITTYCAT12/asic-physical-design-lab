@@ -13,9 +13,10 @@ class CompareMetricsTests(unittest.TestCase):
     def test_numeric_parses_valid_value(self):
         self.assertEqual(numeric({"wns": "-0.125"}, "wns"), -0.125)
 
-    def test_numeric_skips_missing_and_sentinel_values(self):
+    def test_numeric_skips_missing_and_nonnegative_metric_sentinel(self):
         self.assertIsNone(numeric({"wns": ""}, "wns"))
-        self.assertIsNone(numeric({"wns": "-1"}, "wns"))
+        self.assertEqual(numeric({"wns": "-1"}, "wns"), -1.0)
+        self.assertIsNone(numeric({"critical_path_ns": "-1"}, "critical_path_ns"))
         self.assertIsNone(numeric({}, "wns"))
 
     def test_verdict_respects_metric_direction(self):
