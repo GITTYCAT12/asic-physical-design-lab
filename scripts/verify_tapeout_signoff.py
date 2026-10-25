@@ -148,8 +148,8 @@ def check_hold_report_slack(report_dir: Path) -> tuple[Check, Check]:
 
     content = path.read_text(encoding="utf-8", errors="replace")
     match = re.search(
-        r"report_worst_slack\\s+-min\\s+\\(Hold\\).*?worst\\s+slack\\s+"
-        r"([-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?)",
+        r"report_worst_slack\s+-min\s+\(Hold\).*?worst\s+slack\s+"
+        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)",
         content,
         re.IGNORECASE | re.DOTALL,
     )

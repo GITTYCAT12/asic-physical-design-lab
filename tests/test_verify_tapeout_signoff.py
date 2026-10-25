@@ -58,7 +58,7 @@ worst slack 0.32
         import tempfile
         from pathlib import Path
 
-        report = "report_worst_slack -min (Hold)\\nworst slack -0.04\\n"
+        report = "report_worst_slack -min (Hold)\nworst slack -0.04\n"
         with tempfile.TemporaryDirectory() as directory:
             Path(directory, "31-rcx_sta.summary.rpt").write_text(report, encoding="utf-8")
             whs, ths = check_hold_report_slack(Path(directory))
