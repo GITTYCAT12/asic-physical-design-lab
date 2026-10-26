@@ -1,4 +1,4 @@
-"""Unit tests for the PPA metric comparison helper.
+""""Unit tests for the PPA metric comparison helper.
 
 Run with: python -m unittest discover -s tests -v
 """
@@ -18,6 +18,11 @@ class CompareMetricsTests(unittest.TestCase):
         self.assertEqual(numeric({"wns": "-1"}, "wns"), -1.0)
         self.assertIsNone(numeric({"critical_path_ns": "-1"}, "critical_path_ns"))
         self.assertIsNone(numeric({}, "wns"))
+
+    def test_numeric_skips_non_finite_values(self):
+        for value in ("nan", "NaN", "inf", "-inf", "Infinity", "-Infinity"):
+            with self.subTest(value=value):
+                self.assertIsNone(numeric({"wns": value}, "wns"))
 
     def test_verdict_respects_metric_direction(self):
         self.assertEqual(verdict(0.2, "higher is better"), "IMPROVED")
