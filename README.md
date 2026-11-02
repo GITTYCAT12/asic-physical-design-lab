@@ -366,6 +366,20 @@ This lab is organized around practical backend questions:
 - How are DRC, LVS and XOR results interpreted?
 - What evidence is required before considering an implementation signoff-ready?
 
+## Lightweight STA Metric Comparison
+
+Compare a curated baseline and candidate JSON snapshot without confusing a
+metric delta with signoff evidence:
+
+```bash
+python scripts/compare_timing_metrics.py baseline.json candidate.json
+```
+
+The helper validates numeric inputs and reports setup WNS/TNS, hold WNS and
+violating-endpoint deltas. See [the STA metric comparison guide](docs/sta-metric-comparison.md)
+for the input schema, limitations and interpretation guidance. Unit tests run
+with the repository's standard `make test` target.
+
 ## Attribution
 
 This repository contains original experiment configurations, automation scripts, analysis and curated results alongside third-party open-source components.
