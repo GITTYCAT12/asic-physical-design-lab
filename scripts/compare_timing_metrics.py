@@ -8,6 +8,7 @@ Slack values are in nanoseconds. This compares supplied values; it does not
 parse EDA reports or certify timing signoff.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -20,17 +21,24 @@ METRICS = (
 
 
 def load_metrics(path):
+    """Load recognized metrics and reject malformed or non-finite values."""
     with Path(path).open(encoding="utf-8") as handle:
         data = json.load(handle)
     if not isinstance(data, dict):
         raise ValueError(f"{path}: top-level JSON value must be an object")
+
     result = {}
     for key, _ in METRICS:
         value = data.get(key)
-        if value is not None:
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise ValueError(f"{path}: {key} must be numeric")
-            result[key] = value
+        if value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{path}: {key} must be numeric")
+        if not math.isfinite(value):
+            raise ValueError(f"{path}: {key} must be finite")
+        if key == "violating_endpoints" and (value < 0 or not value.is_integer() if isinstance(value, float) else value < 0):
+            raise ValueError(f"{path}: violating_endpoints must be a non-negative integer")
+        result[key] = value
     return result
 
 
