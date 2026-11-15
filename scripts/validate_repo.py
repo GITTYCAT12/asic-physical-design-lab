@@ -53,18 +53,46 @@ def validate_json() -> list[str]:
 
 
 def read_status_rows() -> list[dict[str, str]]:
-    path = ROOT / "results/experiment_status.csv"
-    with path.open(newline="", encoding="utf-8") as handle:
-        rows = list(csv.DictReader(handle))
+    """Read the experiment manifest and reject malformed CSV records early."""
 
+    path = ROOT / "results/experiment_status.csv"
     expected = {"experiment", "status", "artifact", "notes"}
-    actual = set(rows[0]) if rows else set()
-    missing = expected - actual
-    if missing:
-        raise ValueError(f"status manifest missing columns: {sorted(missing)}")
+
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        headers = reader.fieldnames
+        if headers is None:
+            raise ValueError("status manifest is empty")
+
+        duplicates = sorted({name for name in headers if headers.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"status manifest has duplicate columns: {duplicates}")
+
+        missing_headers = expected - set(headers)
+        if missing_headers:
+            raise ValueError(
+                f"status manifest missing columns: {sorted(missing_headers)}"
+            )
+
+        rows: list[dict[str, str]] = []
+        for line_number, row in enumerate(reader, start=2):
+            if None in row:
+                raise ValueError(
+                    f"line {line_number}: unexpected extra CSV field(s)"
+                )
+
+            missing_values = sorted(
+                name for name in expected if row.get(name) is None
+            )
+            if missing_values:
+                raise ValueError(
+                    f"line {line_number}: missing value(s) for columns "
+                    f"{missing_values}"
+                )
+
+            rows.append(row)
 
     return rows
-
 
 def validate_status_manifest() -> list[str]:
     errors: list[str] = []
