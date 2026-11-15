@@ -69,6 +69,31 @@ class ValidateRepoManifestTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("duplicate columns", errors[0])
 
+    def test_rejects_artifact_path_traversal(self):
+        (validate_repo.ROOT / "README.md").write_text("outside results", encoding="utf-8")
+        self.write_manifest(
+            "experiment,status,artifact,notes\n"
+            "baseline,captured,../README.md,reference\n"
+        )
+
+        errors = validate_repo.validate_status_manifest()
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn("must stay within results", errors[0])
+
+    def test_rejects_absolute_artifact_path(self):
+        outside = validate_repo.ROOT / "outside.csv"
+        outside.write_text("metric,value\nwns,-0.1\n", encoding="utf-8")
+        self.write_manifest(
+            "experiment,status,artifact,notes\n"
+            f"baseline,captured,{outside},reference\n"
+        )
+
+        errors = validate_repo.validate_status_manifest()
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn("must stay within results", errors[0])
+
     def test_accepts_a_well_formed_captured_record(self):
         self.write_manifest(
             "experiment,status,artifact,notes\n"

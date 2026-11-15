@@ -6,7 +6,7 @@ from __future__ import annotations
 import csv
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,6 +94,7 @@ def read_status_rows() -> list[dict[str, str]]:
 
     return rows
 
+
 def validate_status_manifest() -> list[str]:
     errors: list[str] = []
     try:
@@ -101,6 +102,7 @@ def validate_status_manifest() -> list[str]:
     except (OSError, ValueError, csv.Error) as exc:
         return [f"cannot read results/experiment_status.csv: {exc}"]
 
+    results_dir = (ROOT / "results").resolve()
     seen: set[str] = set()
 
     for row in rows:
@@ -118,7 +120,27 @@ def validate_status_manifest() -> list[str]:
         if status not in STATUS_VALUES:
             errors.append(f"{name}: unsupported status '{status}'")
 
-        artifact_path = ROOT / "results" / artifact
+        artifact_windows_path = PureWindowsPath(artifact)
+        artifact_relative_path = Path(artifact)
+        if (
+            artifact_relative_path.is_absolute()
+            or artifact_windows_path.is_absolute()
+            or artifact_windows_path.drive
+        ):
+            errors.append(
+                f"{name}: artifact path must stay within results/: {artifact}"
+            )
+            continue
+
+        try:
+            artifact_path = (results_dir / artifact_relative_path).resolve()
+            artifact_path.relative_to(results_dir)
+        except (OSError, RuntimeError, ValueError):
+            errors.append(
+                f"{name}: artifact path must stay within results/: {artifact}"
+            )
+            continue
+
         if not artifact_path.is_file():
             errors.append(f"{name}: artifact does not exist: results/{artifact}")
             continue
