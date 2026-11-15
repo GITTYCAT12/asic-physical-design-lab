@@ -84,10 +84,21 @@ def write_csv(paths: list[TimingPath], output: Path) -> None:
             )
 
 
-def print_summary(paths: list[TimingPath], limit: int) -> None:
-    """Print a human-readable timing summary."""
+def print_summary(
+    paths: list[TimingPath],
+    limit: int,
+    *,
+    all_paths: list[TimingPath] | None = None,
+) -> None:
+    """Print displayed paths and statistics for the complete parsed report.
+
+    paths may be a filtered subset (for example, violations only). The summary
+    statistics must still describe all_paths so filtering output does not
+    silently change the reported denominator or worst slack.
+    """
 
     selected = paths if limit == 0 else paths[:limit]
+    summary_paths = paths if all_paths is None else all_paths
 
     print("Path | Startpoint | Endpoint | Slack (ns) | Status")
     print("-" * 78)
@@ -97,13 +108,14 @@ def print_summary(paths: list[TimingPath], limit: int) -> None:
             f"{path.slack_ns:+.3f} | {path.status}"
         )
 
-    violations = sum(path.slack_ns < 0 for path in paths)
-    worst = min((path.slack_ns for path in paths), default=float("nan"))
+    violations = sum(path.slack_ns < 0 for path in summary_paths)
+    worst = min((path.slack_ns for path in summary_paths), default=float("nan"))
 
     print()
-    print(f"Total parsed paths : {len(paths)}")
+    print(f"Displayed paths    : {len(selected)}")
+    print(f"Total parsed paths : {len(summary_paths)}")
     print(f"Violations         : {violations}")
-    if paths:
+    if summary_paths:
         print(f"Worst slack (ns)   : {worst:+.3f}")
 
 
@@ -158,7 +170,7 @@ def main() -> int:
     else:
         paths_to_print = paths
 
-    print_summary(paths_to_print, args.limit)
+    print_summary(paths_to_print, args.limit, all_paths=paths)
 
     if args.csv is not None:
         write_csv(paths_to_print, args.csv)

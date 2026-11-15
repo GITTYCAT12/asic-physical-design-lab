@@ -6,9 +6,11 @@ Run with: python -m unittest discover -s tests -v
 import csv
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
-from scripts.parse_timing_paths import parse_timing_report, write_csv
+from scripts.parse_timing_paths import parse_timing_report, print_summary, write_csv
 
 
 SAMPLE_REPORT = """Startpoint: top/u_reg0/Q
@@ -50,6 +52,22 @@ slack (MET) 0.000
         self.assertEqual(paths[0].startpoint, "top/complete/Q")
         self.assertEqual(paths[0].slack_ns, 0.0)
         self.assertEqual(paths[0].status, "OK")
+
+    def test_violations_only_summary_retains_full_report_statistics(self):
+        all_paths = parse_timing_report(SAMPLE_REPORT)
+        violations = [path for path in all_paths if path.slack_ns < 0]
+        output = StringIO()
+
+        with redirect_stdout(output):
+            print_summary(violations, limit=10, all_paths=all_paths)
+
+        summary = output.getvalue()
+        self.assertIn("Displayed paths    : 1", summary)
+        self.assertIn("Total parsed paths : 2", summary)
+        self.assertIn("Violations         : 1", summary)
+        self.assertIn("Worst slack (ns)   : -0.125", summary)
+        self.assertIn("top/u_reg0/Q", summary)
+        self.assertNotIn("top/u_reg2/Q", summary)
 
     def test_returns_empty_list_when_report_has_no_complete_paths(self):
         self.assertEqual(parse_timing_report("No timing paths found.\n"), [])
