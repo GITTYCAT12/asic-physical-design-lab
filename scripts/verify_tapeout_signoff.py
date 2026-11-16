@@ -147,11 +147,32 @@ def check_hold_report_slack(report_dir: Path) -> tuple[Check, Check]:
         )
 
     content = path.read_text(encoding="utf-8", errors="replace")
-    match = re.search(
-        r"report_worst_slack\s+-min\s+\(Hold\).*?worst\s+slack\s+"
-        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)",
+    hold_command = re.search(
+        r"^\s*report_worst_slack\s+-min\s+\(Hold\)\s*$",
         content,
-        re.IGNORECASE | re.DOTALL,
+        re.IGNORECASE | re.MULTILINE,
+    )
+    if hold_command is None:
+        detail = f"could not find worst-hold-slack command in {path}"
+        return (
+            Check("hold WHS", False, detail),
+            Check("hold THS", False, detail),
+        )
+
+    # Keep the result associated with this command. A broad DOTALL search can
+    # otherwise cross into a later setup report and mistake its slack for hold.
+    following = content[hold_command.end() :]
+    next_report = re.search(
+        r"^\s*report_[A-Za-z0-9_]+\b",
+        following,
+        re.IGNORECASE | re.MULTILINE,
+    )
+    hold_section = following[: next_report.start()] if next_report else following
+    match = re.search(
+        r"^\s*worst\s+slack\s+"
+        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$",
+        hold_section,
+        re.IGNORECASE | re.MULTILINE,
     )
     if match is None:
         detail = f"could not parse worst hold slack from {path}"

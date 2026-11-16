@@ -54,6 +54,22 @@ worst slack 0.32
         self.assertIn("0.320 ns", whs.detail)
         self.assertTrue(ths.passed)
 
+    def test_hold_parser_does_not_borrow_slack_from_later_setup_report(self):
+        import tempfile
+        from pathlib import Path
+
+        report = """report_worst_slack -min (Hold)
+report_worst_slack -max (Setup)
+worst slack 1.14
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "31-rcx_sta.summary.rpt").write_text(report, encoding="utf-8")
+            whs, ths = check_hold_report_slack(Path(directory))
+
+        self.assertFalse(whs.passed)
+        self.assertFalse(ths.passed)
+        self.assertIn("could not parse", whs.detail)
+
     def test_negative_hold_report_does_not_pass(self):
         import tempfile
         from pathlib import Path
