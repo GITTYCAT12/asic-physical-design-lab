@@ -37,6 +37,23 @@ class ParseTimingPathsTests(unittest.TestCase):
         self.assertAlmostEqual(paths[1].slack_ns, 0.250)
         self.assertEqual(paths[1].status, "OK")
 
+    def test_parses_explicit_plus_and_scientific_slack_values(self):
+        report = """Startpoint: top/u_pos/Q
+Endpoint: top/u_pos/D
+slack (MET) +2.5e-1
+
+Startpoint: top/u_neg/Q
+Endpoint: top/u_neg/D
+slack (VIOLATED) -1.25E-2
+"""
+        paths = parse_timing_report(report)
+
+        self.assertEqual(len(paths), 2)
+        self.assertAlmostEqual(paths[0].slack_ns, 0.25)
+        self.assertEqual(paths[0].status, "OK")
+        self.assertAlmostEqual(paths[1].slack_ns, -0.0125)
+        self.assertEqual(paths[1].status, "VIOLATION")
+
     def test_skips_incomplete_blocks_without_gaps_in_path_indices(self):
         report = """Startpoint: top/incomplete/Q
 Endpoint: top/no_slack/D

@@ -14,7 +14,7 @@ from pathlib import Path
 _STARTPOINT = re.compile(r"^\s*Startpoint:\s*(?P<value>\S+)", re.IGNORECASE | re.MULTILINE)
 _ENDPOINT = re.compile(r"^\s*Endpoint:\s*(?P<value>\S+)", re.IGNORECASE | re.MULTILINE)
 _SLACK = re.compile(
-    r"^\s*slack\s*\([^)]*\)\s*(?P<value>-?\d+(?:\.\d+)?)",
+    r"^\s*slack\s*\([^)]*\)\s*(?P<value>[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)",
     re.IGNORECASE | re.MULTILINE,
 )
 
