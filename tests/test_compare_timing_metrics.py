@@ -65,6 +65,10 @@ class CompareTimingMetricsTests(unittest.TestCase):
             "violating_endpoints": 0,
         })
 
+    def test_rejects_integers_outside_float_range_without_traceback(self):
+        with self.assertRaisesRegex(ValueError, "must be finite"):
+            self.load_payload({"wns_ns": 10**1000})
+
 
 if __name__ == "__main__":
     unittest.main()

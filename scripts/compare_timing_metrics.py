@@ -34,7 +34,11 @@ def load_metrics(path):
             continue
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"{path}: {key} must be numeric")
-        if not math.isfinite(value):
+        try:
+            finite = math.isfinite(value)
+        except OverflowError:
+            finite = False
+        if not finite:
             raise ValueError(f"{path}: {key} must be finite")
         if key == "violating_endpoints" and (value < 0 or not value.is_integer() if isinstance(value, float) else value < 0):
             raise ValueError(f"{path}: violating_endpoints must be a non-negative integer")
