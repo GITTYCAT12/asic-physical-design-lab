@@ -69,6 +69,13 @@ class CompareTimingMetricsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be finite"):
             self.load_payload({"wns_ns": 10**1000})
 
+    def test_rejects_duplicate_metric_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.json"
+            path.write_text('{"wns_ns": -0.125, "wns_ns": 0.125}', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate JSON key: wns_ns"):
+                load_metrics(path)
+
 
 if __name__ == "__main__":
     unittest.main()

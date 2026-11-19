@@ -20,10 +20,20 @@ METRICS = (
 )
 
 
+def _reject_duplicate_keys(pairs):
+    """Build a JSON object while rejecting ambiguous duplicate member names."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def load_metrics(path):
     """Load recognized metrics and reject malformed or non-finite values."""
     with Path(path).open(encoding="utf-8") as handle:
-        data = json.load(handle)
+        data = json.load(handle, object_pairs_hook=_reject_duplicate_keys)
     if not isinstance(data, dict):
         raise ValueError(f"{path}: top-level JSON value must be an object")
 
