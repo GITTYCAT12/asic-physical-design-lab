@@ -56,11 +56,10 @@ slack (VIOLATED) -1.25E-2
 
     def test_rejects_overflowing_slack_values(self):
         for slack in ("1e999", "-1e999"):
-            report = (
-                "Startpoint: top/u_overflow/Q\\n"
-                "Endpoint: top/u_overflow/D\\n"
-                f"slack (MET) {slack}\\n"
-            )
+            report = f"""Startpoint: top/u_overflow/Q
+Endpoint: top/u_overflow/D
+slack (MET) {slack}
+"""
             with self.subTest(slack=slack):
                 with self.assertRaisesRegex(ValueError, "non-finite slack value"):
                     parse_timing_report(report)
