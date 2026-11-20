@@ -54,6 +54,17 @@ slack (VIOLATED) -1.25E-2
         self.assertAlmostEqual(paths[1].slack_ns, -0.0125)
         self.assertEqual(paths[1].status, "VIOLATION")
 
+    def test_rejects_overflowing_slack_values(self):
+        for slack in ("1e999", "-1e999"):
+            report = (
+                "Startpoint: top/u_overflow/Q\\n"
+                "Endpoint: top/u_overflow/D\\n"
+                f"slack (MET) {slack}\\n"
+            )
+            with self.subTest(slack=slack):
+                with self.assertRaisesRegex(ValueError, "non-finite slack value"):
+                    parse_timing_report(report)
+
     def test_skips_incomplete_blocks_without_gaps_in_path_indices(self):
         report = """Startpoint: top/incomplete/Q
 Endpoint: top/no_slack/D

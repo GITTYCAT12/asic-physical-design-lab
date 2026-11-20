@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -53,12 +54,19 @@ def parse_timing_report(text: str) -> list[TimingPath]:
         if endpoint_match is None or slack_match is None:
             continue
 
+        slack_ns = float(slack_match.group("value"))
+        if not math.isfinite(slack_ns):
+            raise ValueError(
+                "non-finite slack value for timing path "
+                f"{match.group('value')} -> {endpoint_match.group('value')}"
+            )
+
         paths.append(
             TimingPath(
                 index=len(paths) + 1,
                 startpoint=match.group("value"),
                 endpoint=endpoint_match.group("value"),
-                slack_ns=float(slack_match.group("value")),
+                slack_ns=slack_ns,
             )
         )
 
@@ -155,8 +163,12 @@ def main() -> int:
         print(f"Error: timing report '{report_path}' not found.", file=sys.stderr)
         return 2
 
-    text = report_path.read_text(encoding="utf-8", errors="replace")
-    paths = parse_timing_report(text)
+    try:
+        text = report_path.read_text(encoding="utf-8", errors="replace")
+        paths = parse_timing_report(text)
+    except (OSError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
     if not paths:
         print(
             "Error: no complete timing paths were found "
