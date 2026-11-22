@@ -35,7 +35,7 @@ class CompareMetricsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
             path.write_text(
-                "wns,tns,wns\\n-0.1,-1.2,0.25\\n",
+                "wns,tns,wns\n-0.1,-1.2,0.25\n",
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "duplicate metric column"):
@@ -44,7 +44,7 @@ class CompareMetricsTests(unittest.TestCase):
     def test_read_metrics_rejects_empty_header_names(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
-            path.write_text("wns,,tns\\n-0.1,unused,-1.2\\n", encoding="utf-8")
+            path.write_text("wns,,tns\n-0.1,unused,-1.2\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "empty column name"):
                 read_metrics(path)
 
