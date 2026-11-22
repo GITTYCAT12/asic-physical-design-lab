@@ -43,7 +43,18 @@ def read_metrics(path: Path) -> dict[str, str]:
     if not path.is_file():
         raise FileNotFoundError(path)
     with path.open(newline="", encoding="utf-8") as handle:
-        rows = list(csv.DictReader(handle))
+        reader = csv.DictReader(handle)
+        headers = reader.fieldnames
+        if headers is None:
+            raise ValueError(f"{path}: no CSV header found")
+
+        duplicates = sorted({name for name in headers if headers.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"{path}: duplicate metric column(s): {duplicates}")
+        if any(not name or not name.strip() for name in headers):
+            raise ValueError(f"{path}: CSV contains an empty column name")
+
+        rows = list(reader)
     if not rows:
         raise ValueError(f"{path}: no metric row found")
     return rows[0]

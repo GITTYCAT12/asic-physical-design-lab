@@ -31,6 +31,23 @@ class CompareMetricsTests(unittest.TestCase):
         self.assertEqual(verdict(2.0, "lower is better"), "REGRESSED")
         self.assertEqual(verdict(0.0, "lower is better"), "UNCHANGED")
 
+    def test_read_metrics_rejects_duplicate_headers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.csv"
+            path.write_text(
+                "wns,tns,wns\\n-0.1,-1.2,0.25\\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate metric column"):
+                read_metrics(path)
+
+    def test_read_metrics_rejects_empty_header_names(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.csv"
+            path.write_text("wns,,tns\\n-0.1,unused,-1.2\\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "empty column name"):
+                read_metrics(path)
+
     def test_read_metrics_uses_first_csv_row(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
