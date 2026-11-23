@@ -89,7 +89,7 @@ worst slack 1.14
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
             path.write_text(
-                "flow_status,wns,tns,wns\\nflow completed,-0.1,0,0.2\\n",
+                "flow_status,wns,tns,wns\nflow completed,-0.1,0,0.2\n",
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "duplicate metric column"):
@@ -102,7 +102,7 @@ worst slack 1.14
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
             path.write_text(
-                "flow_status,,wns\\nflow completed,unused,0.1\\n",
+                "flow_status,,wns\nflow completed,unused,0.1\n",
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "empty column name"):
