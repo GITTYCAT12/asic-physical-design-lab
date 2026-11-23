@@ -2,7 +2,7 @@
 
 import unittest
 
-from scripts.verify_tapeout_signoff import check_hold_report_slack, check_metrics, metric_number
+from scripts.verify_tapeout_signoff import check_hold_report_slack, check_metrics, metric_number, read_metrics
 
 
 BASE_METRICS = {
@@ -81,6 +81,32 @@ worst slack 1.14
 
         self.assertFalse(whs.passed)
         self.assertFalse(ths.passed)
+
+    def test_duplicate_csv_metric_headers_are_rejected(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.csv"
+            path.write_text(
+                "flow_status,wns,tns,wns\\nflow completed,-0.1,0,0.2\\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate metric column"):
+                read_metrics(path)
+
+    def test_empty_csv_metric_headers_are_rejected(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.csv"
+            path.write_text(
+                "flow_status,,wns\\nflow completed,unused,0.1\\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "empty column name"):
+                read_metrics(path)
 
     def test_non_finite_metrics_are_rejected(self):
         for value in ("nan", "inf", "-inf", "1e999"):

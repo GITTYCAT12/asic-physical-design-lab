@@ -68,7 +68,18 @@ def resolve_report_dir(base_dir: Path, run_tag: str, explicit: Path | None) -> P
 
 def read_metrics(path: Path) -> dict[str, str]:
     with path.open(newline="", encoding="utf-8") as handle:
-        rows = list(csv.DictReader(handle))
+        reader = csv.DictReader(handle)
+        headers = reader.fieldnames
+        if headers is None:
+            raise ValueError(f"metrics file contains no CSV header: {path}")
+
+        duplicates = sorted({name for name in headers if headers.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"{path}: duplicate metric column(s): {duplicates}")
+        if any(not name or not name.strip() for name in headers):
+            raise ValueError(f"{path}: CSV contains an empty column name")
+
+        rows = list(reader)
 
     if not rows:
         raise ValueError(f"metrics file contains no data rows: {path}")
