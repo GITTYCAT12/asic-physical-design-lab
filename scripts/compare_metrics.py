@@ -52,7 +52,7 @@ def read_metrics(path: Path) -> dict[str, str]:
         # BOM or surrounding whitespace to the first/header fields. Normalize
         # names before looking up curated metrics, then reject collisions.
         normalized_headers = [
-            name.strip().lstrip("\\ufeff").strip() if name is not None else ""
+            name.strip().lstrip(chr(0xFEFF)).strip() if name is not None else ""
             for name in headers
         ]
         if any(not name for name in normalized_headers):

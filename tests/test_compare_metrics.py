@@ -51,13 +51,13 @@ class CompareMetricsTests(unittest.TestCase):
     def test_read_metrics_normalizes_utf8_bom_and_header_whitespace(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
-            path.write_text("\\ufeff wns , tns \\n-0.1,-1.2\\n", encoding="utf-8")
+            path.write_text(chr(0xFEFF) + " wns , tns " + chr(10) + "-0.1,-1.2" + chr(10), encoding="utf-8")
             self.assertEqual(read_metrics(path), {"wns": "-0.1", "tns": "-1.2"})
 
     def test_read_metrics_rejects_headers_that_collide_after_normalization(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "metrics.csv"
-            path.write_text("wns, wns \\n-0.1,0.25\\n", encoding="utf-8")
+            path.write_text("wns, wns " + chr(10) + "-0.1,0.25" + chr(10), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "duplicate metric column"):
                 read_metrics(path)
 
