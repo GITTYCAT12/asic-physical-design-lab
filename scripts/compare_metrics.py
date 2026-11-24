@@ -48,12 +48,24 @@ def read_metrics(path: Path) -> dict[str, str]:
         if headers is None:
             raise ValueError(f"{path}: no CSV header found")
 
-        duplicates = sorted({name for name in headers if headers.count(name) > 1})
-        if duplicates:
-            raise ValueError(f"{path}: duplicate metric column(s): {duplicates}")
-        if any(not name or not name.strip() for name in headers):
+        # OpenLane exports may be saved by spreadsheet tools that add a UTF-8
+        # BOM or surrounding whitespace to the first/header fields. Normalize
+        # names before looking up curated metrics, then reject collisions.
+        normalized_headers = [
+            name.strip().lstrip("\\ufeff").strip() if name is not None else ""
+            for name in headers
+        ]
+        if any(not name for name in normalized_headers):
             raise ValueError(f"{path}: CSV contains an empty column name")
 
+        duplicates = sorted({
+            name for name in normalized_headers
+            if normalized_headers.count(name) > 1
+        })
+        if duplicates:
+            raise ValueError(f"{path}: duplicate metric column(s): {duplicates}")
+
+        reader.fieldnames = normalized_headers
         rows = list(reader)
     if not rows:
         raise ValueError(f"{path}: no metric row found")
